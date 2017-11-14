@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">HW8-MultiThreading</string>
+    <string name="text_view_test_text">Test text</string>
+    <string name="button_thread_using_text">Thread using</string>
+    <string name="button_asynctask_using_text">AsyncTask using</string>
+    <string name="button_executor_using_text">Executor using</string>
 </resources>
