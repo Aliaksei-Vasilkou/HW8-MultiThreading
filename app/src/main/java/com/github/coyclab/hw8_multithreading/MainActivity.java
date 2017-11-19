@@ -2,18 +2,22 @@ package com.github.coyclab.hw8_multithreading;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class MainActivity extends AppCompatActivity {
 
-    TextView mTestText;
-    Button mBtnThreadUsing;
-    Button mBtnAsyncTaskUsing;
-    Button mBtnExecutorUsing;
-    TextMaker mTextMaker = new TextMaker();
+    private TextView mTestText;
+    private final TextMaker mTextMaker = new TextMaker();
+    private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -21,11 +25,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mTestText = (TextView) findViewById(R.id.text_view_test_text);
-        mBtnThreadUsing = (Button) findViewById(R.id.button_thread_using);
-        mBtnAsyncTaskUsing = (Button) findViewById(R.id.button_async_task_using);
-        mBtnExecutorUsing = (Button) findViewById(R.id.button_executor_using);
 
-        mBtnThreadUsing.setOnClickListener(new View.OnClickListener() {
+        // TreadUsing button OnClickListener
+        final Button btnThreadUsing = (Button) findViewById(R.id.button_thread_using);
+        btnThreadUsing.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(final View pView) {
@@ -33,11 +36,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mBtnAsyncTaskUsing.setOnClickListener(new View.OnClickListener() {
+        // AsyncTask button OnClickListener
+        final Button btnAsyncTaskUsing = (Button) findViewById(R.id.button_async_task_using);
+        btnAsyncTaskUsing.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(final View pView) {
-                new TextChangerAsynkTask().execute();
+                changeTextUsingAsynkTask();
+            }
+        });
+
+        // ExecutorUsing button OnClickListener
+        final Button btnExecutorUsing = (Button) findViewById(R.id.button_executor_using);
+        btnExecutorUsing.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View pView) {
+                changeTextUsingExecutor();
             }
         });
     }
@@ -58,17 +73,38 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void changeTextUsingAsynkTask() {
+        new TextChangerAsynkTask().execute();
+    }
+
+    private void changeTextUsingExecutor() {
+        final Runnable runnable = new Runnable() {
+
+            @Override
+            public void run() {
+                final String resultText = mTextMaker.makeText("Executor");
+                uiHandler.post(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        mTestText.setText(resultText);
+                    }
+                });
+            }
+        };
+        mExecutorService.execute(runnable);
+    }
 
     // Inner AsynkTask class
     class TextChangerAsynkTask extends AsyncTask<Void, Void, Void> {
 
         private final String METOD_NAME = "AsynkTask";
-        private String  resultText = "";
+        private String resultText = "";
 
         @Override
         protected Void doInBackground(final Void... pVoids) {
-           resultText = new TextMaker().makeText(METOD_NAME);
-           return null;
+            resultText = mTextMaker.makeText(METOD_NAME);
+            return null;
         }
 
         @Override
@@ -77,5 +113,4 @@ public class MainActivity extends AppCompatActivity {
             mTestText.setText(resultText);
         }
     }
-
 }
