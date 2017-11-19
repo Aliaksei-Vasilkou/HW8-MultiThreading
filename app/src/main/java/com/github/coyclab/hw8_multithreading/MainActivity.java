@@ -1,5 +1,6 @@
 package com.github.coyclab.hw8_multithreading;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -12,6 +13,7 @@ public class MainActivity extends AppCompatActivity {
     Button mBtnThreadUsing;
     Button mBtnAsyncTaskUsing;
     Button mBtnExecutorUsing;
+    TextMaker mTextMaker = new TextMaker();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -27,19 +29,53 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(final View pView) {
-                new Thread(new Runnable() {
+                changeTextUsingTread();
+            }
+        });
 
-                    @Override
-                    public void run() {
-                        textChange("Threading");
-                    }
-                }).run();
+        mBtnAsyncTaskUsing.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(final View pView) {
+                new TextChangerAsynkTask().execute();
             }
         });
     }
 
-    void textChange(final String pMethodName) {
-        final String result = "Text was successfully changed using " + pMethodName;
-            mTestText.setText(result);
+    private void changeTextUsingTread() {
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                mTestText.post(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        mTestText.setText(mTextMaker.makeText("Threading"));
+                    }
+                });
+            }
+        }).start();
     }
+
+
+    // Inner AsynkTask class
+    class TextChangerAsynkTask extends AsyncTask<Void, Void, Void> {
+
+        private final String METOD_NAME = "AsynkTask";
+        private String  resultText = "";
+
+        @Override
+        protected Void doInBackground(final Void... pVoids) {
+           resultText = new TextMaker().makeText(METOD_NAME);
+           return null;
+        }
+
+        @Override
+        protected void onPostExecute(final Void pVoid) {
+            super.onPostExecute(pVoid);
+            mTestText.setText(resultText);
+        }
+    }
+
 }
